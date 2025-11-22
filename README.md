@@ -14,46 +14,135 @@ A Python application that processes legislation PDFs using Google Gemini API to 
 ├── agent.py              # Main LegislativeAgent class (orchestrator)
 ├── app.py                # Streamlit UI application
 ├── debug_agent.py        # Debug script for the agent
-├── requirements.txt      # Python dependencies
-├── README.md             # This file
-├── workflow.png          # Workflow diagram
+├── requirements.txt      
+├── README.md             
+├── workflow.png          
 ├── chunk_summaries.json  # Intermediate chunk summaries
 ├── legislation_analysis.json  # Final output
 └── src/                  # Source modules
     ├── __init__.py
-    ├── text_utils.py         # Text extraction, cleaning, and chunking utilities
-    ├── summarizer.py         # Text summarization functionality
-    ├── section_extractor.py  # Section extraction from legislation
-    ├── rule_checker.py       # Legal document rule compliance checking
-    └── json_exporter.py      # JSON export functionality
+    ├── text_utils.py        
+    ├── summarizer.py         
+    ├── section_extractor.py  
+    ├── rule_checker.py       
+    └── json_exporter.py      
 ```
 
-## Detailed Workflow
+## Detailed Implementation Overview
 
-1. **PDF Ingestion**:
-   - User uploads a legislation PDF through the Streamlit UI
-   - The agent extracts raw text from the PDF using PyMuPDF
+This Legislative AI Agent was developed using Python 3.12 and follows a comprehensive workflow to process legal documents. The implementation focuses on modularity, efficiency, and accuracy in analyzing legislation PDFs.
 
-2. **Text Preprocessing**:
-   - Clean the extracted text (remove page numbers, artifacts, normalize whitespace)
-   - Remove isolated numbers and non-ASCII characters
+### Core Workflow Implementation
 
-3. **Text Chunking**:
-   - Split the cleaned text into manageable chunks (default size: 6000 characters)
-   - This allows for efficient processing of large documents
+#### 1. PDF Text Ingestion and Preprocessing
+The process begins with uploading a legislation PDF through the Streamlit UI. The system uses PyMuPDF (fitz) to extract raw text from the PDF document. Advanced text cleaning techniques are applied to remove common artifacts:
+- Page numbers and page indicators ("Page X of Y")
+- Excessive whitespace and blank lines
+- Isolated numbers (typically page numbers)
+- Non-ASCII characters that might cause processing issues
+- Text normalization for consistent formatting
 
-4. **Parallel Processing**:
-   - **Chunk Summarization**: Each chunk is summarized independently using Gemini
-   - **Section Extraction**: Key sections are extracted from the full text
-   - **Rule Compliance Check**: The text is checked against legal document rules
+#### 2. Intelligent Text Chunking
+To handle large legal documents effectively, the cleaned text is split into manageable chunks:
+- Default chunk size: 6000 characters
+- Overlapping prevented to maintain context integrity
+- Chunk boundaries respect word boundaries when possible
+- This approach enables processing of documents of any length while staying within LLM context limits
 
-5. **Summary Combination**:
-   - Individual chunk summaries are combined into a comprehensive final summary
-   - The final summary covers key aspects: Purpose, Definitions, Eligibility, Obligations, Enforcement
+#### 3. Parallel Chunk Processing
+Each text chunk is processed independently to maximize efficiency:
+- Individual chunk summarization using Google Gemini 2.5 Flash model
+- Section extraction from the complete text
+- Rule compliance checking against legal document standards
+- Parallel processing capabilities for performance optimization
 
-6. **Results Compilation**:
-   - All results are compiled into a structured JSON output
-   - Includes final summary, extracted sections, and rule compliance results
+#### 4. Hierarchical Summarization
+The summarization process follows a two-tier approach:
+- **First Level**: Each chunk is summarized independently into 3-4 bullet points
+- **Second Level**: All chunk summaries are combined into a comprehensive final summary covering:
+  - Purpose of the legislation
+  - Key definitions
+  - Eligibility criteria
+  - Obligations and responsibilities
+  - Enforcement mechanisms
+
+#### 5. Schema-Based Section Extraction
+The system extracts specific sections from the legislation following a predefined schema:
+- Definitions
+- Obligations
+- Responsibilities
+- Eligibility
+- Payments
+- Penalties
+- Record-keeping
+
+This structured extraction ensures consistent output format regardless of input document variations.
+
+#### 6. Legal Document Rule Compliance Checking
+The agent validates the legislation against 6 critical legal document rules:
+1. **Key Terms Definition**: Verifies if the act defines essential terminology
+2. **Eligibility Criteria**: Checks if the act specifies who qualifies
+3. **Authority Responsibilities**: Determines if government obligations are defined
+4. **Enforcement Methods**: Verifies if penalties or enforcement mechanisms are listed
+5. **Payment Calculations**: Checks if payment methodologies are explained
+6. **Record-keeping Requirements**: Determines if reporting obligations exist
+
+For each rule, the system provides:
+- Pass/fail status
+- Evidence excerpt from the text
+- Confidence score (0-100)
+
+#### 7. Data Storage and JSON Export
+Results are systematically stored in structured JSON formats:
+
+**Intermediate Storage**:
+- `chunk_summaries.json`: Contains individual chunk summaries for audit and reuse
+- Optimized to avoid reprocessing when the same document is analyzed multiple times
+
+**Final Output** (`legislation_analysis.json`):
+```json
+{
+  "summary": "Final comprehensive summary...",
+  "sections": {
+    "definitions": "...",
+    "obligations": "...",
+    "responsibilities": "...",
+    "eligibility": "...",
+    "payments": "...",
+    "penalties": "...",
+    "record_keeping": "..."
+  },
+  "rule_checks": [
+    {
+      "rule": "Act must define key terms",
+      "status": "pass/fail",
+      "evidence": "Specific text excerpt...",
+      "confidence": 95
+    }
+  ],
+  "chunk_summaries": ["...", "..."]
+}
+```
+
+### Technical Architecture
+
+#### Modular Design
+The system follows a modular architecture with separate components:
+- **Text Utilities**: Handles PDF extraction, cleaning, and chunking
+- **Summarizer**: Manages hierarchical text summarization
+- **Section Extractor**: Performs schema-based section extraction
+- **Rule Checker**: Implements legal document compliance validation
+- **JSON Exporter**: Manages structured data storage
+
+#### AI Model Configuration
+- **Primary Model**: Google Gemini 2.5 Flash
+- **Temperature Setting**: 0.3 (optimized for stable, consistent responses)
+- **Reasoning**: Lower temperature reduces hallucinations in legal document analysis
+
+#### Performance Optimizations
+- Chunk summary caching to avoid redundant processing
+- Structured logging for debugging and monitoring
+- Efficient memory management for large document processing
 
 ## How to Run
 
@@ -94,7 +183,7 @@ A Python application that processes legislation PDFs using Google Gemini API to 
 
 ## Requirements
 
-- Python 3.7+
+- Python 3.12
 - Google Gemini API key
 - Dependencies listed in requirements.txt
 
