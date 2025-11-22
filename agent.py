@@ -16,6 +16,7 @@ from src.rule_checker import RuleChecker
 from src.json_exporter import JSONExporter
 from typing import List, Dict, Any
 
+# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class LegislativeAgent:
         logger.info("Starting chunk summaries export to: %s", path)
         self.json_exporter.export_chunk_summaries(summaries, path)
     
-    def load_existing_chunk_summaries(self, path: str = "chunk_summaries.json") -> List[str]:
+    def load_existing_chunk_summaries(self, path: str = "output/chunk_summaries.json") -> List[str]:
         """Load existing chunk summaries from file if available."""
         if os.path.exists(path):
             logger.info("Loading existing chunk summaries from: %s", path)
@@ -91,44 +92,53 @@ class LegislativeAgent:
                 logger.warning("Failed to load existing chunk summaries: %s", str(e))
         return None
     
-    def process_legislation(self, pdf_path: str, output_path: str = "output.json") -> Dict[str, Any]:
+    def process_legislation(self, pdf_path: str, output_path: str = "output/legislation_analysis.json") -> Dict[str, Any]:
         """Complete processing pipeline for legislation PDF."""
         logger.info("Starting legislation processing pipeline")
         logger.info("PDF Path: %s", pdf_path)
         logger.info("Output Path: %s", output_path)
         
-       
+        # Step 1: Extract text
         logger.info("Step 1: Extracting text from PDF...")
         raw_text = self.extract_text(pdf_path)
         
+        # Step 2: Clean text
         logger.info("Step 2: Cleaning text...")
         cleaned_text = self.clean_text(raw_text)
         
+        # Step 3: Chunk text
         logger.info("Step 3: Chunking text...")
         chunks = self.chunk_text(cleaned_text)
         
+        # Step 4: Summarize chunks
         logger.info("Step 4: Summarizing chunks...")
+        # Check if chunk summaries already exist
         chunk_summaries = self.load_existing_chunk_summaries()
         if chunk_summaries is None:
             logger.info("No existing chunk summaries found, generating new ones...")
             chunk_summaries = self.summarize_chunks(chunks)
             # Export chunk summaries for future use
-            self.export_chunk_summaries(chunk_summaries, "chunk_summaries.json")
+            self.export_chunk_summaries(chunk_summaries, "output/chunk_summaries.json")
         else:
             logger.info("Using existing chunk summaries")
-    
+        
+        # Step 5: Combine summaries
         logger.info("Step 5: Combining summaries...")
         final_summary = self.combine_summaries(chunk_summaries)
-
+        
+        # Step 6: Extract sections
         logger.info("Step 6: Extracting sections...")
         sections = self.extract_sections(cleaned_text)
         
+        # Step 7: Apply rule checks
         logger.info("Step 7: Applying legal document rule checks...")
         rule_checks = self.apply_rule_checks(cleaned_text)
         
+        # Step 8: Export results
         logger.info("Step 8: Exporting results...")
         self.export_json(final_summary, sections, rule_checks, output_path)
         
+        # Return all results
         results = {
             "summary": final_summary,
             "sections": sections,

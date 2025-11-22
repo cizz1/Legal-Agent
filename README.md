@@ -4,7 +4,7 @@ A Python application that processes legislation PDFs using Google Gemini API to 
 
 ## Workflow
 
-![Legislative AI Agent Workflow](workflow.png)
+![Legislative AI Agent Workflow](assets/workflow.png)
 
 ## Project Structure
 
@@ -14,18 +14,20 @@ A Python application that processes legislation PDFs using Google Gemini API to 
 ├── agent.py              # Main LegislativeAgent class (orchestrator)
 ├── app.py                # Streamlit UI application
 ├── debug_agent.py        # Debug script for the agent
-├── requirements.txt      
-├── README.md             
-├── workflow.png          
-├── chunk_summaries.json  # Intermediate chunk summaries
-├── legislation_analysis.json  # Final output
+├── requirements.txt      # Python dependencies
+├── README.md             # This file
+├── assets/               # Asset files
+│   └── workflow.png      # Workflow diagram
+├── output/               # Output files
+│   ├── chunk_summaries.json  # Intermediate chunk summaries
+│   └── legislation_analysis.json  # Final output
 └── src/                  # Source modules
     ├── __init__.py
-    ├── text_utils.py        
-    ├── summarizer.py         
-    ├── section_extractor.py  
-    ├── rule_checker.py       
-    └── json_exporter.py      
+    ├── text_utils.py         # Text extraction, cleaning, and chunking utilities
+    ├── summarizer.py         # Text summarization functionality
+    ├── section_extractor.py  # Section extraction from legislation
+    ├── rule_checker.py       # Legal document rule compliance checking
+    └── json_exporter.py      # JSON export functionality
 ```
 
 ## Detailed Implementation Overview
@@ -96,10 +98,10 @@ For each rule, the system provides:
 Results are systematically stored in structured JSON formats:
 
 **Intermediate Storage**:
-- `chunk_summaries.json`: Contains individual chunk summaries for audit and reuse
+- `output/chunk_summaries.json`: Contains individual chunk summaries for audit and reuse
 - Optimized to avoid reprocessing when the same document is analyzed multiple times
 
-**Final Output** (`legislation_analysis.json`):
+**Final Output** (`output/legislation_analysis.json`):
 ```json
 {
   "summary": "Final comprehensive summary...",
